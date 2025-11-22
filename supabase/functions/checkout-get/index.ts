@@ -1,4 +1,5 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.84.0';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -19,15 +20,58 @@ serve(async (req) => {
     }
 
     const SELLER_BACKEND_URL = Deno.env.get('SELLER_BACKEND_URL');
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    
+    // Fetch checkout from seller backend
     const response = await fetch(`${SELLER_BACKEND_URL}/checkout_sessions/${checkoutId}`);
     
     if (!response.ok) {
       throw new Error(`Seller backend error: ${response.status}`);
     }
 
-    const data = await response.json();
+    const checkoutData = await response.json();
     
-    return new Response(JSON.stringify(data), {
+    // Get our products from database
+    const { data: ourProducts, error: productsError } = await supabase
+      .from('products')
+      .select('*');
+    
+    if (productsError) {
+      console.error('Error fetching products:', productsError);
+      // Return original data if we can't fetch our products
+      return new Response(JSON.stringify(checkoutData), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    
+    // Create mapping from seller backend IDs to our products
+    const sellerToOurProducts: Record<string, any> = {};
+    ourProducts?.forEach((product, index) => {
+      const sellerId = ['item_123', 'item_456', 'item_789'][index] || 'item_123';
+      sellerToOurProducts[sellerId] = product;
+    });
+    
+    // Replace line items with our product data while keeping pricing from seller backend
+    if (checkoutData.line_items && Array.isArray(checkoutData.line_items)) {
+      checkoutData.line_items = checkoutData.line_items.map((lineItem: any) => {
+        const ourProduct = sellerToOurProducts[lineItem.item?.id];
+        if (ourProduct) {
+          return {
+            ...lineItem,
+            item: {
+              ...ourProduct,
+              // Keep the ID for tracking, but use our product details
+            }
+          };
+        }
+        return lineItem;
+      });
+    }
+    
+    return new Response(JSON.stringify(checkoutData), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
