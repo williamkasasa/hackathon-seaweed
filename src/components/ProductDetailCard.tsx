@@ -2,7 +2,7 @@ import { Product } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ShoppingCart, Package, Sparkles } from 'lucide-react';
+import { ShoppingCart, Package, Sparkles, BookOpen } from 'lucide-react';
 
 interface ProductDetailCardProps {
   product: Product;
@@ -49,6 +49,18 @@ export function ProductDetailCard({ product, onAddToCart, onViewDetails }: Produ
             <p className="text-base text-muted-foreground leading-relaxed">
               {product.description}
             </p>
+
+            {product.usage_info && (
+              <div className="p-4 bg-primary/5 border border-primary/20 rounded-lg space-y-2">
+                <div className="flex items-center gap-2 text-primary font-semibold">
+                  <BookOpen className="w-4 h-4" />
+                  <span>How to Use</span>
+                </div>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  {product.usage_info}
+                </p>
+              </div>
+            )}
 
             <div className="pt-2">
               <div className="flex items-baseline gap-2">
