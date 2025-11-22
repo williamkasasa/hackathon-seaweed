@@ -108,7 +108,25 @@ Focus: Sustainability, minerals, hydration, detoxification, unique flavors.`,
   }
 
   const generatedProducts = JSON.parse(toolCall.function.arguments);
-  return generatedProducts.products;
+  
+  // Map product images - use custom images for specific products
+  const products = generatedProducts.products.map((product: any) => {
+    // Check if product name contains "Kelp Flakes" or "Artisanal Kelp"
+    if (product.name.toLowerCase().includes('kelp flakes') || 
+        product.name.toLowerCase().includes('artisanal kelp')) {
+      return {
+        ...product,
+        image: '/images/artisanal-kelp-flakes.png',
+      };
+    }
+    // Use Unsplash placeholder for other products
+    return {
+      ...product,
+      image: `https://images.unsplash.com/photo-${1505253149613 + Math.floor(Math.random() * 1000000)}?w=400`,
+    };
+  });
+  
+  return products;
 }
 
 serve(async (req) => {
