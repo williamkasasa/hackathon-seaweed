@@ -1,5 +1,4 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.84.0';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -32,18 +31,11 @@ serve(async (req) => {
     const sptUrl = MOCK_STRIPE_SPT_URL?.replace(/\/$/, '');
     
     // Step 1: Get checkout session to get the total amount
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? ''
-    );
-    
-    const { data: checkout, error: checkoutError } = await supabase.functions.invoke('checkout-get', {
-      body: { id: checkoutId },
-    });
-    
-    if (checkoutError || !checkout) {
+    const checkoutResponse = await fetch(`${sellerUrl}/checkout_sessions/${checkoutId}`);
+    if (!checkoutResponse.ok) {
       throw new Error('Failed to fetch checkout session');
     }
+    const checkout = await checkoutResponse.json();
     
     // Find the total amount
     const totalItem = checkout.totals.find((t: any) => t.type === 'total');
@@ -133,11 +125,14 @@ serve(async (req) => {
     console.log('Payment Intent created:', paymentIntent.id);
     
     // Step 5: Update checkout session to completed
-    const { data: updatedCheckout } = await supabase.functions.invoke('checkout-update', {
-      body: {
-        checkoutId,
-        status: 'completed',
+    const updateResponse = await fetch(`${sellerUrl}/checkout_sessions/${checkoutId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
       },
+      body: JSON.stringify({
+        status: 'completed',
+      }),
     });
     
     const data = {

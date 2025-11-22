@@ -5,9 +5,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Share the same in-memory storage
-const checkoutSessions = new Map<string, any>();
-
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -21,47 +18,23 @@ serve(async (req) => {
       throw new Error('Checkout ID is required');
     }
 
-    const session = checkoutSessions.get(checkoutId);
+    const SELLER_BACKEND_URL = Deno.env.get('SELLER_BACKEND_URL');
     
-    if (!session) {
-      return new Response(
-        JSON.stringify({ error: 'Checkout session not found' }),
-        {
-          status: 404,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      );
+    const response = await fetch(`${SELLER_BACKEND_URL}/checkout_sessions/${checkoutId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(updateData),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Seller backend error: ${response.status}`);
     }
+
+    const data = await response.json();
     
-    // Update session with new data
-    const updatedSession = {
-      ...session,
-      ...updateData,
-    };
-    
-    // Recalculate totals if fulfillment option changed
-    if (updateData.fulfillment_option_id) {
-      const option = updatedSession.fulfillment_options.find(
-        (opt: any) => opt.id === updateData.fulfillment_option_id
-      );
-      
-      if (option) {
-        const subtotal = updatedSession.totals.find((t: any) => t.type === 'subtotal').amount;
-        const shipping = parseInt(option.total);
-        const tax = updatedSession.totals.find((t: any) => t.type === 'tax').amount;
-        
-        updatedSession.totals = [
-          { type: 'subtotal', display_text: 'Subtotal', amount: subtotal },
-          { type: 'fulfillment', display_text: 'Shipping', amount: shipping },
-          { type: 'tax', display_text: 'Tax', amount: tax },
-          { type: 'total', display_text: 'Total', amount: subtotal + shipping + tax },
-        ];
-      }
-    }
-    
-    checkoutSessions.set(checkoutId, updatedSession);
-    
-    return new Response(JSON.stringify(updatedSession), {
+    return new Response(JSON.stringify(data), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
