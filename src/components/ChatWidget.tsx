@@ -7,12 +7,20 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import ReactMarkdown from 'react-markdown';
+import { Product } from '@/lib/types';
+
 interface Message {
   role: 'user' | 'assistant';
   content: string;
 }
 
-export function ChatWidget() {
+interface ChatWidgetProps {
+  products: Product[];
+  onAddToCart: (product: Product, quantity: number) => void;
+  onStartCheckout: () => void;
+}
+
+export function ChatWidget({ products, onAddToCart, onStartCheckout }: ChatWidgetProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -54,10 +62,11 @@ export function ChatWidget() {
     setIsLoading(true);
 
     let assistantContent = '';
+    let toolCalls: any[] = [];
     
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/algae-chat`,
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`,
         {
           method: 'POST',
           headers: {
@@ -66,7 +75,6 @@ export function ChatWidget() {
           },
           body: JSON.stringify({
             messages: [...messages, userMessage],
-            language,
           }),
         }
       );
@@ -93,50 +101,26 @@ export function ChatWidget() {
         throw new Error('Failed to get response');
       }
 
-      if (!response.body) throw new Error('No response body');
+      const data = await response.json();
+      assistantContent = data.content;
+      toolCalls = data.original_tool_calls || [];
 
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = '';
+      // Add assistant message
+      setMessages(prev => [...prev, { role: 'assistant', content: assistantContent }]);
 
-      const updateAssistantMessage = (content: string) => {
-        setMessages(prev => {
-          const lastMessage = prev[prev.length - 1];
-          if (lastMessage?.role === 'assistant') {
-            return [...prev.slice(0, -1), { role: 'assistant', content }];
-          }
-          return [...prev, { role: 'assistant', content }];
-        });
-      };
+      // Handle tool calls
+      if (toolCalls && toolCalls.length > 0) {
+        for (const toolCall of toolCalls) {
+          const functionName = toolCall.function.name;
+          const args = JSON.parse(toolCall.function.arguments);
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        
-        buffer += decoder.decode(value, { stream: true });
-        
-        let newlineIndex: number;
-        while ((newlineIndex = buffer.indexOf('\n')) !== -1) {
-          let line = buffer.slice(0, newlineIndex);
-          buffer = buffer.slice(newlineIndex + 1);
-          
-          if (line.endsWith('\r')) line = line.slice(0, -1);
-          if (line.startsWith(':') || line.trim() === '') continue;
-          if (!line.startsWith('data: ')) continue;
-          
-          const jsonStr = line.slice(6).trim();
-          if (jsonStr === '[DONE]') break;
-          
-          try {
-            const parsed = JSON.parse(jsonStr);
-            const content = parsed.choices?.[0]?.delta?.content;
-            if (content) {
-              assistantContent += content;
-              updateAssistantMessage(assistantContent);
+          if (functionName === 'add_to_cart') {
+            const product = products.find(p => p.id === args.product_id);
+            if (product) {
+              onAddToCart(product, args.quantity || 1);
             }
-          } catch {
-            buffer = line + '\n' + buffer;
-            break;
+          } else if (functionName === 'start_checkout') {
+            onStartCheckout();
           }
         }
       }
