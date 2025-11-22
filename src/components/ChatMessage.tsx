@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { ProductDetailCard } from '@/components/ProductDetailCard';
 import { ShoppingCart } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 
 interface ChatMessageProps {
   message: Message;
@@ -50,13 +51,17 @@ export function ChatMessage({ message, products, onAddToCart, onViewDetails }: C
       >
         {/* Only show text content if not displaying products, or show a brief intro */}
         {!isUser && hasProductToolCall && products && products.length > 0 ? (
-          <p className="text-sm leading-relaxed mb-4">
-            Here are our seaweed products available right now:
-          </p>
+          <div className="text-sm leading-relaxed mb-4 prose prose-sm dark:prose-invert max-w-none">
+            <ReactMarkdown>Here are our seaweed products available right now:</ReactMarkdown>
+          </div>
         ) : !isUser && hasProductDetailCall && detailProduct ? (
-          <p className="text-sm leading-relaxed mb-4">{message.content}</p>
+          <div className="text-sm leading-relaxed mb-4 prose prose-sm dark:prose-invert max-w-none">
+            <ReactMarkdown>{message.content}</ReactMarkdown>
+          </div>
         ) : (
-          <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
+          <div className="text-sm leading-relaxed prose prose-sm dark:prose-invert max-w-none">
+            <ReactMarkdown>{message.content}</ReactMarkdown>
+          </div>
         )}
         
         {/* Product Detail Card */}
