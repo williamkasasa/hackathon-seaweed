@@ -32,10 +32,17 @@ export function ChatMessage({ message, products, onAddToCart, onViewDetails }: C
             : 'bg-card text-card-foreground border border-border shadow-sm w-full'
         )}
       >
-        <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
+        {/* Only show text content if not displaying products, or show a brief intro */}
+        {!isUser && hasProductToolCall && products && products.length > 0 ? (
+          <p className="text-sm leading-relaxed mb-4">
+            Here are our seaweed products available right now:
+          </p>
+        ) : (
+          <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
+        )}
         
         {!isUser && hasProductToolCall && products && products.length > 0 && (
-          <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {products.map((product) => (
               <Card key={product.id} className="overflow-hidden transition-smooth hover:shadow-elegant group cursor-pointer">
                 <div
