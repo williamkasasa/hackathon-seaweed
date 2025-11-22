@@ -14,7 +14,7 @@ const Index = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
-      content: 'Welcome! 👋 I\'m your AI shopping assistant. I can help you browse our products, answer questions, and complete your purchase. What are you looking for today?',
+      content: 'Bienvenue ! 👋 Je suis votre assistant d\'achat IA. Je peux vous aider à parcourir nos produits, répondre à vos questions et finaliser votre achat. Que recherchez-vous aujourd\'hui ?',
     },
   ]);
   const [inputValue, setInputValue] = useState('');
@@ -76,7 +76,7 @@ const Index = () => {
         handleToolCalls(data.original_tool_calls);
       }
     } catch (error) {
-      toast.error('Failed to send message');
+      toast.error('Échec de l\'envoi du message');
       console.error(error);
     } finally {
       setLoading(false);
@@ -97,7 +97,7 @@ const Index = () => {
         if (cart.length > 0) {
           setCheckoutOpen(true);
         } else {
-          toast.error('Your cart is empty');
+          toast.error('Votre panier est vide');
         }
       }
     });
@@ -115,7 +115,7 @@ const Index = () => {
       }
       return [...prev, { id: product.id, quantity: Math.min(quantity, product.stock) }];
     });
-    toast.success(`Added ${product.name} to cart`);
+    toast.success(`${product.name} ajouté au panier`);
   };
 
   const handleUpdateCartQuantity = (productId: string, quantity: number) => {
@@ -130,7 +130,7 @@ const Index = () => {
 
   const handleRemoveFromCart = (productId: string) => {
     setCart((prev) => prev.filter((item) => item.id !== productId));
-    toast.success('Item removed from cart');
+    toast.success('Article retiré du panier');
   };
 
   const handleCheckoutComplete = () => {
@@ -146,7 +146,7 @@ const Index = () => {
             <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
               <Sparkles className="w-5 h-5 text-primary-foreground" />
             </div>
-            <h1 className="text-2xl font-bold">AI Shop</h1>
+            <h1 className="text-2xl font-bold">Boutique IA</h1>
           </div>
           <ShoppingCart
             cart={cart}
@@ -191,7 +191,7 @@ const Index = () => {
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-              placeholder="Ask me anything or tell me what you're looking for..."
+              placeholder="Posez-moi une question ou dites-moi ce que vous cherchez..."
               className="flex-1"
               disabled={loading}
             />
