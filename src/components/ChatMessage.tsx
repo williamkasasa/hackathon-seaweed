@@ -2,6 +2,7 @@ import { Message, Product } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
+import { ProductDetailCard } from '@/components/ProductDetailCard';
 import { ShoppingCart } from 'lucide-react';
 
 interface ChatMessageProps {
@@ -16,6 +17,21 @@ export function ChatMessage({ message, products, onAddToCart, onViewDetails }: C
   const hasProductToolCall = message.original_tool_calls?.some(
     (tc) => tc.function.name === 'list_products'
   );
+  const hasProductDetailCall = message.original_tool_calls?.some(
+    (tc) => tc.function.name === 'show_product_details'
+  );
+  
+  // Find the specific product for detail view
+  let detailProduct: Product | undefined;
+  if (hasProductDetailCall && products) {
+    const detailCall = message.original_tool_calls?.find(
+      (tc) => tc.function.name === 'show_product_details'
+    );
+    if (detailCall) {
+      const args = JSON.parse(detailCall.function.arguments);
+      detailProduct = products.find((p) => p.id === args.product_id);
+    }
+  }
 
   return (
     <div
@@ -37,10 +53,24 @@ export function ChatMessage({ message, products, onAddToCart, onViewDetails }: C
           <p className="text-sm leading-relaxed mb-4">
             Here are our seaweed products available right now:
           </p>
+        ) : !isUser && hasProductDetailCall && detailProduct ? (
+          <p className="text-sm leading-relaxed mb-4">{message.content}</p>
         ) : (
           <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
         )}
         
+        {/* Product Detail Card */}
+        {!isUser && hasProductDetailCall && detailProduct && (
+          <div className="mt-2">
+            <ProductDetailCard
+              product={detailProduct}
+              onAddToCart={(p, q) => onAddToCart?.(p)}
+              onViewDetails={onViewDetails}
+            />
+          </div>
+        )}
+        
+        {/* Product Grid */}
         {!isUser && hasProductToolCall && products && products.length > 0 && (
           <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {products.map((product) => (
