@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
-import { MessageCircle, X, Send, Loader2 } from 'lucide-react';
+import { MessageCircle, X, Send, Loader2, Volume2, VolumeX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -16,7 +17,10 @@ export function ChatWidget() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [voiceEnabled, setVoiceEnabled] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const { language, t } = useLanguage();
   const { toast } = useToast();
 
@@ -136,6 +140,11 @@ export function ChatWidget() {
           }
         }
       }
+
+      // Generate voice if enabled and we have content
+      if (voiceEnabled && assistantContent) {
+        await playVoice(assistantContent);
+      }
     } catch (error) {
       console.error('Chat error:', error);
       toast({
@@ -147,6 +156,53 @@ export function ChatWidget() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const playVoice = async (text: string) => {
+    try {
+      setIsSpeaking(true);
+      const { data, error } = await supabase.functions.invoke('text-to-speech', {
+        body: { text, voiceId: 'EXAVITQu4vr4xnSDxMaL' } // Sarah voice
+      });
+
+      if (error) throw error;
+
+      if (data?.audioContent) {
+        // Stop any currently playing audio
+        if (audioRef.current) {
+          audioRef.current.pause();
+          audioRef.current = null;
+        }
+
+        // Create and play new audio
+        const audio = new Audio(`data:audio/mpeg;base64,${data.audioContent}`);
+        audioRef.current = audio;
+        
+        audio.onended = () => {
+          setIsSpeaking(false);
+          audioRef.current = null;
+        };
+
+        audio.onerror = () => {
+          setIsSpeaking(false);
+          audioRef.current = null;
+        };
+
+        await audio.play();
+      }
+    } catch (error) {
+      console.error('Voice playback error:', error);
+      setIsSpeaking(false);
+    }
+  };
+
+  const toggleVoice = () => {
+    if (isSpeaking && audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+      setIsSpeaking(false);
+    }
+    setVoiceEnabled(!voiceEnabled);
   };
 
   return (
@@ -199,7 +255,26 @@ export function ChatWidget() {
           </ScrollArea>
 
           {/* Input */}
-          <div className="p-4 border-t">
+          <div className="p-4 border-t space-y-2">
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant={voiceEnabled ? "default" : "outline"}
+                size="sm"
+                onClick={toggleVoice}
+                disabled={isLoading}
+                className="whitespace-nowrap"
+              >
+                {isSpeaking ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                ) : voiceEnabled ? (
+                  <Volume2 className="h-4 w-4 mr-1" />
+                ) : (
+                  <VolumeX className="h-4 w-4 mr-1" />
+                )}
+                {voiceEnabled ? 'Voice On' : 'Voice Off'}
+              </Button>
+            </div>
             <form
               onSubmit={(e) => {
                 e.preventDefault();
