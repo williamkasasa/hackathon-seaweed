@@ -6,7 +6,7 @@ import { ShoppingCart } from '@/components/ShoppingCart';
 import { CheckoutModal } from '@/components/CheckoutModal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Send, Sparkles, Loader2 } from 'lucide-react';
+import { Send, Waves, Loader2, Package, Sparkles as SparklesIcon, MessageCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -14,9 +14,10 @@ const Index = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
-      content: 'Welcome! 👋 I\'m your AI shopping assistant. I can help you browse our products, answer questions, and complete your purchase. What are you looking for today?',
+      content: 'Welcome to Seaweed & Co! 🌊 I\'m your kelp consultant and shopping assistant. I can help you discover the power of the ocean with our natural seaweed products. Are you looking for skincare, superfood supplements, or recipe ideas?',
     },
   ]);
+  const [showQuickActions, setShowQuickActions] = useState(true);
   const [inputValue, setInputValue] = useState('');
   const [loading, setLoading] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
@@ -46,12 +47,14 @@ const Index = () => {
     }
   };
 
-  const handleSendMessage = async () => {
-    if (!inputValue.trim() || loading) return;
+  const handleSendMessage = async (message?: string) => {
+    const messageToSend = message || inputValue.trim();
+    if (!messageToSend || loading) return;
 
-    const userMessage: Message = { role: 'user', content: inputValue };
+    const userMessage: Message = { role: 'user', content: messageToSend };
     setMessages((prev) => [...prev, userMessage]);
     setInputValue('');
+    setShowQuickActions(false);
     setLoading(true);
 
     try {
@@ -140,13 +143,16 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-subtle flex flex-col">
       {/* Header */}
-      <header className="bg-card border-b border-border shadow-sm sticky top-0 z-10">
+      <header className="bg-card border-b border-border shadow-sm sticky top-0 z-10 backdrop-blur-sm bg-card/95">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
-              <Sparkles className="w-5 h-5 text-primary-foreground" />
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-full gradient-ocean flex items-center justify-center shadow-elegant">
+              <Waves className="w-6 h-6 text-white" />
             </div>
-            <h1 className="text-2xl font-bold">AI Shop</h1>
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">🌊 Seaweed & Co.</h1>
+              <p className="text-xs text-muted-foreground">Harnessing the Power of the Ocean</p>
+            </div>
           </div>
           <ShoppingCart
             cart={cart}
@@ -164,13 +170,46 @@ const Index = () => {
         <div className="flex-1 mb-6 overflow-y-auto">
           <div className="space-y-4">
             {messages.map((message, index) => (
-              <ChatMessage 
-                key={index} 
-                message={message}
-                products={products}
-                onAddToCart={(p) => handleAddToCart(p, 1)}
-                onViewDetails={setSelectedProduct}
-              />
+              <div key={index}>
+                <ChatMessage 
+                  message={message}
+                  products={products}
+                  onAddToCart={(p) => handleAddToCart(p, 1)}
+                  onViewDetails={setSelectedProduct}
+                />
+                {/* Quick Action Buttons - Show only after first message */}
+                {index === 0 && showQuickActions && (
+                  <div className="flex flex-wrap gap-2 mt-4 ml-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleSendMessage('Show me all products')}
+                      className="border-primary/30 hover:bg-primary/10 hover:border-primary"
+                    >
+                      <Package className="w-4 h-4 mr-2" />
+                      Browse All
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleSendMessage('What are your skincare products?')}
+                      className="border-primary/30 hover:bg-primary/10 hover:border-primary"
+                    >
+                      <SparklesIcon className="w-4 h-4 mr-2" />
+                      Skincare Range
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleSendMessage('Tell me about superfood supplements')}
+                      className="border-primary/30 hover:bg-primary/10 hover:border-primary"
+                    >
+                      <MessageCircle className="w-4 h-4 mr-2" />
+                      Supplements
+                    </Button>
+                  </div>
+                )}
+              </div>
             ))}
             {loading && (
               <div className="flex justify-start mb-4">
@@ -190,13 +229,13 @@ const Index = () => {
               ref={inputRef}
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+              onKeyPress={(e) => e.key === 'Enter' && !loading && handleSendMessage()}
               placeholder="Ask me anything or tell me what you're looking for..."
               className="flex-1"
               disabled={loading}
             />
             <Button
-              onClick={handleSendMessage}
+              onClick={() => handleSendMessage()}
               disabled={loading || !inputValue.trim()}
               size="icon"
             >
