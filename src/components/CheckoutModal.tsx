@@ -44,7 +44,7 @@ export function CheckoutModal({ open, onClose, cart, products, onCheckoutComplet
       }
       setStep('review');
     } catch (error) {
-      toast.error('Failed to create checkout session');
+      toast.error('Échec de la création de la session de paiement');
       console.error(error);
     } finally {
       setLoading(false);
@@ -67,7 +67,7 @@ export function CheckoutModal({ open, onClose, cart, products, onCheckoutComplet
 
       setCheckout(data);
     } catch (error) {
-      toast.error('Failed to update shipping option');
+      toast.error('Échec de la mise à jour de l\'option de livraison');
       console.error(error);
     } finally {
       setLoading(false);
@@ -91,13 +91,13 @@ export function CheckoutModal({ open, onClose, cart, products, onCheckoutComplet
 
       setCheckout(data);
       setStep('success');
-      toast.success('Order placed successfully!');
+      toast.success('Commande passée avec succès !');
       setTimeout(() => {
         onCheckoutComplete();
         handleClose();
       }, 3000);
     } catch (error) {
-      toast.error('Payment failed. Please try again.');
+      toast.error('Échec du paiement. Veuillez réessayer.');
       setStep('review');
       console.error(error);
     }
@@ -121,23 +121,23 @@ export function CheckoutModal({ open, onClose, cart, products, onCheckoutComplet
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl">
-            {step === 'shipping' && 'Shipping Information'}
-            {step === 'review' && 'Review Order'}
-            {step === 'processing' && 'Processing Payment'}
-            {step === 'success' && 'Order Confirmed!'}
+            {step === 'shipping' && 'Informations de livraison'}
+            {step === 'review' && 'Vérifier la commande'}
+            {step === 'processing' && 'Traitement du paiement'}
+            {step === 'success' && 'Commande confirmée !'}
           </DialogTitle>
           <p className="text-sm text-muted-foreground">
-            {step === 'shipping' && 'Confirm your shipping address'}
-            {step === 'review' && 'Review your order details before payment'}
-            {step === 'processing' && 'Please wait while we process your payment'}
-            {step === 'success' && 'Your order has been placed successfully'}
+            {step === 'shipping' && 'Confirmez votre adresse de livraison'}
+            {step === 'review' && 'Vérifiez les détails de votre commande avant le paiement'}
+            {step === 'processing' && 'Veuillez patienter pendant le traitement de votre paiement'}
+            {step === 'success' && 'Votre commande a été passée avec succès'}
           </p>
         </DialogHeader>
 
         {step === 'shipping' && (
           <div className="space-y-6">
             <div className="bg-card p-4 rounded-lg border">
-              <h3 className="font-semibold mb-2">Shipping Address</h3>
+              <h3 className="font-semibold mb-2">Adresse de livraison</h3>
               <p className="text-sm text-muted-foreground">{DEFAULT_SHIPPING_ADDRESS.name}</p>
               <p className="text-sm text-muted-foreground">{DEFAULT_SHIPPING_ADDRESS.line_one}</p>
               {DEFAULT_SHIPPING_ADDRESS.line_two && (
@@ -149,7 +149,7 @@ export function CheckoutModal({ open, onClose, cart, products, onCheckoutComplet
             </div>
             <Button className="w-full" size="lg" onClick={handleCreateCheckout} disabled={loading}>
               {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-              Continue to Review
+              Continuer vers la vérification
             </Button>
           </div>
         )}
@@ -157,7 +157,7 @@ export function CheckoutModal({ open, onClose, cart, products, onCheckoutComplet
         {step === 'review' && checkout && (
           <div className="space-y-6">
             <div className="space-y-4">
-              <h3 className="font-semibold">Order Items</h3>
+              <h3 className="font-semibold">Articles commandés</h3>
               {checkout.line_items.map((item, index) => {
                 const cartItem = cart.find(c => c.id === item.item.id);
                 const quantity = cartItem?.quantity || 1;
@@ -166,8 +166,8 @@ export function CheckoutModal({ open, onClose, cart, products, onCheckoutComplet
                   <div key={item.id} className="flex justify-between items-start bg-card p-3 rounded-lg border">
                     <div className="flex-1">
                       <p className="font-medium">{item.item.name}</p>
-                      <p className="text-sm text-muted-foreground">Quantity: {quantity}</p>
-                      <p className="text-sm text-muted-foreground">${(unitPrice / 100).toFixed(2)} each</p>
+                      <p className="text-sm text-muted-foreground">Quantité : {quantity}</p>
+                      <p className="text-sm text-muted-foreground">{(unitPrice / 100).toFixed(2)} $ chacun</p>
                     </div>
                     <p className="font-semibold">${(item.total / 100).toFixed(2)}</p>
                   </div>
@@ -178,7 +178,7 @@ export function CheckoutModal({ open, onClose, cart, products, onCheckoutComplet
             <Separator />
 
             <div className="space-y-3">
-              <h3 className="font-semibold mb-3">Shipping Options</h3>
+              <h3 className="font-semibold mb-3">Options de livraison</h3>
               <RadioGroup value={selectedShipping} onValueChange={setSelectedShipping}>
                 {checkout.fulfillment_options.map((option) => {
                   const displayName = option.display_name || option.title || 'Shipping';
@@ -212,7 +212,7 @@ export function CheckoutModal({ open, onClose, cart, products, onCheckoutComplet
               {selectedShipping !== checkout.fulfillment_option_id && (
                 <Button variant="outline" className="w-full" onClick={handleUpdateShipping} disabled={loading}>
                   {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                  Update Shipping
+                  Mettre à jour la livraison
                 </Button>
               )}
             </div>
@@ -221,26 +221,26 @@ export function CheckoutModal({ open, onClose, cart, products, onCheckoutComplet
 
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Subtotal:</span>
-                <span>${(getTotalAmount('subtotal') / 100).toFixed(2)}</span>
+                <span className="text-muted-foreground">Sous-total :</span>
+                <span>{(getTotalAmount('subtotal') / 100).toFixed(2)} $</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Shipping:</span>
-                <span>${(getTotalAmount('fulfillment') / 100).toFixed(2)}</span>
+                <span className="text-muted-foreground">Livraison :</span>
+                <span>{(getTotalAmount('fulfillment') / 100).toFixed(2)} $</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Tax:</span>
-                <span>${(getTotalAmount('tax') / 100).toFixed(2)}</span>
+                <span className="text-muted-foreground">Taxes :</span>
+                <span>{(getTotalAmount('tax') / 100).toFixed(2)} $</span>
               </div>
               <Separator />
               <div className="flex justify-between items-center">
-                <span className="text-lg font-semibold">Total:</span>
-                <span className="text-2xl font-bold text-primary">${(getTotalAmount('total') / 100).toFixed(2)}</span>
+                <span className="text-lg font-semibold">Total :</span>
+                <span className="text-2xl font-bold text-primary">{(getTotalAmount('total') / 100).toFixed(2)} $</span>
               </div>
             </div>
 
             <Button className="w-full" size="lg" onClick={handleCompletePayment}>
-              Complete Payment
+              Finaliser le paiement
             </Button>
           </div>
         )}
@@ -248,8 +248,8 @@ export function CheckoutModal({ open, onClose, cart, products, onCheckoutComplet
         {step === 'processing' && (
           <div className="flex flex-col items-center justify-center py-12">
             <Loader2 className="w-16 h-16 text-primary animate-spin mb-4" />
-            <p className="text-lg font-medium">Processing your payment...</p>
-            <p className="text-sm text-muted-foreground">Please wait</p>
+            <p className="text-lg font-medium">Traitement de votre paiement...</p>
+            <p className="text-sm text-muted-foreground">Veuillez patienter</p>
           </div>
         )}
 
@@ -258,15 +258,15 @@ export function CheckoutModal({ open, onClose, cart, products, onCheckoutComplet
             <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-4">
               <CheckCircle2 className="w-12 h-12 text-primary" />
             </div>
-            <h3 className="text-2xl font-bold mb-2">Order Confirmed!</h3>
-            <p className="text-muted-foreground mb-6">Thank you for your purchase</p>
+            <h3 className="text-2xl font-bold mb-2">Commande confirmée !</h3>
+            <p className="text-muted-foreground mb-6">Merci pour votre achat</p>
             <div className="bg-card p-4 rounded-lg border w-full max-w-sm">
               <div className="flex items-center gap-3 mb-2">
                 <Package className="w-5 h-5 text-muted-foreground" />
-                <span className="text-sm font-medium">Order ID: {checkout.id}</span>
+                <span className="text-sm font-medium">N° de commande : {checkout.id}</span>
               </div>
               <p className="text-sm text-muted-foreground">
-                A confirmation email has been sent to {DEFAULT_BUYER.email}
+                Un e-mail de confirmation a été envoyé à {DEFAULT_BUYER.email}
               </p>
             </div>
           </div>

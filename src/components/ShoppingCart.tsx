@@ -40,14 +40,14 @@ export function ShoppingCart({ cart, products, onUpdateQuantity, onRemove, onChe
       </SheetTrigger>
       <SheetContent className="w-full sm:max-w-lg flex flex-col">
         <SheetHeader>
-          <SheetTitle>Shopping Cart ({totalItems})</SheetTitle>
+          <SheetTitle>Panier ({totalItems})</SheetTitle>
         </SheetHeader>
         <div className="flex flex-col flex-1 mt-6 overflow-hidden">
           <div className="flex-1 overflow-auto pb-4">
             {cartWithProducts.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center">
                 <CartIcon className="w-16 h-16 text-muted-foreground/30 mb-4" />
-                <p className="text-muted-foreground">Your cart is empty</p>
+                <p className="text-muted-foreground">Votre panier est vide</p>
               </div>
             ) : (
               <div className="space-y-4">
@@ -106,11 +106,11 @@ export function ShoppingCart({ cart, products, onUpdateQuantity, onRemove, onChe
             <div className="border-t pt-4 pb-6 bg-background">
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <span className="text-lg font-semibold">Subtotal:</span>
-                  <span className="text-2xl font-bold text-primary">${(subtotal / 100).toFixed(2)}</span>
+                  <span className="text-lg font-semibold">Sous-total :</span>
+                  <span className="text-2xl font-bold text-primary">{(subtotal / 100).toFixed(2)} $</span>
                 </div>
                 <Button className="w-full" size="lg" onClick={onCheckout}>
-                  Proceed to Checkout
+                  Passer à la caisse
                 </Button>
               </div>
             </div>
