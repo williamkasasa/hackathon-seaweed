@@ -39,8 +39,8 @@ const Index = () => {
     try {
       const { data, error } = await supabase.functions.invoke('products');
       if (error) throw error;
-      if (data?.products) {
-        setProducts(Object.values(data.products));
+      if (Array.isArray(data)) {
+        setProducts(data);
       }
     } catch (error) {
       console.error('Failed to fetch products:', error);
