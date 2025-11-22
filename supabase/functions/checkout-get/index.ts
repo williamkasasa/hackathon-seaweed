@@ -5,6 +5,9 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Share the same in-memory storage (in production, use a database)
+const checkoutSessions = new Map<string, any>();
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -18,16 +21,19 @@ serve(async (req) => {
       throw new Error('Checkout ID is required');
     }
 
-    const SELLER_BACKEND_URL = Deno.env.get('SELLER_BACKEND_URL');
-    const response = await fetch(`${SELLER_BACKEND_URL}/checkout_sessions/${checkoutId}`);
+    const session = checkoutSessions.get(checkoutId);
     
-    if (!response.ok) {
-      throw new Error(`Seller backend error: ${response.status}`);
+    if (!session) {
+      return new Response(
+        JSON.stringify({ error: 'Checkout session not found' }),
+        {
+          status: 404,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
     }
-
-    const data = await response.json();
     
-    return new Response(JSON.stringify(data), {
+    return new Response(JSON.stringify(session), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
