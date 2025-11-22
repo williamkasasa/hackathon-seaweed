@@ -7,7 +7,7 @@ const corsHeaders = {
 
 // Cache products for 1 hour to avoid regenerating on every request
 // Reset cache on deployment by using a version number
-const CACHE_VERSION = '2'; // Increment this to invalidate cache
+const CACHE_VERSION = '3'; // Increment this to invalidate cache
 let cachedProducts: any = null;
 let cacheTimestamp = 0;
 let cacheVersion = '';
@@ -114,14 +114,24 @@ Focus: Sustainability, minerals, hydration, detoxification, unique flavors.`,
   
   // Map product images - use custom images for specific products
   const products = generatedProducts.products.map((product: any) => {
-    // Check if product name contains "Kelp Flakes" or "Artisanal Kelp"
-    if (product.name.toLowerCase().includes('kelp flakes') || 
-        product.name.toLowerCase().includes('artisanal kelp')) {
+    const nameLower = product.name.toLowerCase();
+    
+    // Check for specific product names and assign custom images
+    if (nameLower.includes('kelp flakes') || nameLower.includes('artisanal kelp')) {
       return {
         ...product,
         image: '/images/artisanal-kelp-flakes.png',
       };
     }
+    
+    if ((nameLower.includes('spirulina') && nameLower.includes('wakame')) || 
+        nameLower.includes('immunity boost')) {
+      return {
+        ...product,
+        image: '/images/spirulina-wakame-immunity-boost.png',
+      };
+    }
+    
     // Use Unsplash placeholder for other products
     return {
       ...product,
