@@ -82,28 +82,66 @@ serve(async (req) => {
     
     console.log('SPT token created:', sptToken);
     
-    // Step 3: Complete checkout with SPT token
-    const completeResponse = await fetch(`${sellerUrl}/checkout_sessions/${checkoutId}/complete`, {
+    // Step 3: Retrieve payment method from SPT
+    const grantedTokenResponse = await fetch(`${sptUrl}/v1/shared_payment/granted_tokens/${sptToken}`);
+    
+    if (!grantedTokenResponse.ok) {
+      console.error('Failed to retrieve granted token');
+      throw new Error('Failed to retrieve payment method');
+    }
+    
+    const grantedTokenData = await grantedTokenResponse.json();
+    const paymentMethodId = grantedTokenData.payment_method;
+    
+    console.log('Payment method retrieved:', paymentMethodId);
+    
+    // Step 4: Create Stripe Payment Intent and charge
+    const STRIPE_KEY = Deno.env.get('STRIPE_KEY');
+    
+    const paymentIntentResponse = await fetch('https://api.stripe.com/v1/payment_intents', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${STRIPE_KEY}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        amount: totalAmount.toString(),
+        currency: checkout.currency.toLowerCase(),
+        payment_method: paymentMethodId,
+        confirm: 'true',
+        'metadata[checkout_id]': checkoutId,
+      }).toString(),
+    });
+
+    if (!paymentIntentResponse.ok) {
+      const errorText = await paymentIntentResponse.text();
+      console.error('Payment Intent creation failed:', errorText);
+      throw new Error('Failed to process payment');
+    }
+
+    const paymentIntent = await paymentIntentResponse.json();
+    console.log('Payment Intent created:', paymentIntent.id);
+    
+    // Step 5: Update checkout session to completed
+    const updateResponse = await fetch(`${sellerUrl}/checkout_sessions/${checkoutId}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        payment_data: {
-          token: sptToken,
-          provider: payment_provider,
-        },
-        buyer: checkout.buyer,
+        status: 'completed',
       }),
     });
-
-    if (!completeResponse.ok) {
-      const errorText = await completeResponse.text();
-      console.error('Checkout completion failed:', errorText);
-      throw new Error(`Failed to complete checkout: ${completeResponse.status}`);
-    }
-
-    const data = await completeResponse.json();
+    
+    const data = {
+      ...checkout,
+      status: 'completed',
+      order: {
+        id: paymentIntent.id,
+        checkout_session_id: checkoutId,
+        permalink_url: `https://dashboard.stripe.com/test/payments/${paymentIntent.id}`,
+      },
+    };
     
     return new Response(JSON.stringify(data), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
