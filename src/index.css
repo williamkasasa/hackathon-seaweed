@@ -133,4 +133,12 @@ All colors MUST be HSL.
   body {
     @apply bg-background text-foreground;
   }
+  
+  /* Position ElevenLabs widget to lower left */
+  elevenlabs-convai {
+    position: fixed !important;
+    bottom: 20px !important;
+    left: 20px !important;
+    right: auto !important;
+  }
 }
