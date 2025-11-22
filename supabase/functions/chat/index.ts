@@ -152,43 +152,55 @@ Always be proactive - if a user shows interest in buying, offer to add items to 
       ...messages,
     ];
 
-    console.log('Calling LLM with', conversationHistory.length, 'messages');
+    // Tool-aware conversation loop (allows multiple tool calls like list_products then add_to_cart)
+    let allToolCalls: any[] = [];
+    let finalAssistantMessage: any = null;
 
-    const llmResponse = await fetch('https://api.dat1.co/api/v1/collection/open-ai/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${DAT1_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-120-oss',
-        messages: conversationHistory,
-        temperature: 0.7,
-        tools,
-        tool_choice: 'auto',
-      }),
-    });
+    for (let i = 0; i < 3; i++) {
+      console.log('Calling LLM (iteration', i + 1, ') with', conversationHistory.length, 'messages');
 
-    if (!llmResponse.ok) {
-      const errorText = await llmResponse.text();
-      console.error('LLM API error:', llmResponse.status, errorText);
-      throw new Error(`LLM API error: ${llmResponse.status}`);
-    }
+      const llmResponse = await fetch('https://api.dat1.co/api/v1/collection/open-ai/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${DAT1_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-120-oss',
+          messages: conversationHistory,
+          temperature: 0.7,
+          tools,
+          tool_choice: 'auto',
+        }),
+      });
 
-    const llmData = await llmResponse.json();
-    const assistantMessage = llmData.choices[0].message;
+      if (!llmResponse.ok) {
+        const errorText = await llmResponse.text();
+        console.error('LLM API error:', llmResponse.status, errorText);
+        throw new Error(`LLM API error: ${llmResponse.status}`);
+      }
 
-    console.log('LLM response received, tool calls:', assistantMessage.tool_calls?.length || 0);
+      const llmData = await llmResponse.json();
+      const assistantMessage = llmData.choices[0].message;
 
-    // Check if there are tool calls
-    if (assistantMessage.tool_calls && assistantMessage.tool_calls.length > 0) {
-      const originalToolCalls = assistantMessage.tool_calls;
+      const toolCalls = assistantMessage.tool_calls || [];
+      console.log('LLM response received, tool calls:', toolCalls.length);
 
-      // Execute each tool call
+      if (toolCalls.length === 0) {
+        // No more tool calls – this is our final answer
+        finalAssistantMessage = assistantMessage;
+        break;
+      }
+
+      // Track all tools used so the frontend can react (e.g. add_to_cart, start_checkout)
+      allToolCalls = allToolCalls.concat(toolCalls);
+
+      // Add assistant message that triggered tools
       conversationHistory.push(assistantMessage);
 
-      for (const toolCall of assistantMessage.tool_calls) {
-        const args = JSON.parse(toolCall.function.arguments);
+      // Execute each tool call and append results
+      for (const toolCall of toolCalls) {
+        const args = JSON.parse(toolCall.function.arguments || '{}');
         console.log('Executing tool:', toolCall.function.name, 'with args:', args);
         const result = await executeToolCall(toolCall.function.name, args);
         console.log('Tool result:', result);
@@ -200,29 +212,16 @@ Always be proactive - if a user shows interest in buying, offer to add items to 
         });
       }
 
-      // Make another LLM call with tool results
-      console.log('Calling LLM with tool results');
-      const finalLlmResponse = await fetch('https://api.dat1.co/api/v1/collection/open-ai/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${DAT1_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'gpt-120-oss',
-          messages: conversationHistory,
-          temperature: 0.7,
-        }),
-      });
+      // Loop will call the LLM again with updated conversationHistory so it can use
+      // tool results (e.g. product IDs) to decide next actions like add_to_cart.
+    }
 
-      const finalLlmData = await finalLlmResponse.json();
-      const finalMessage = finalLlmData.choices[0].message;
-
+    if (!finalAssistantMessage) {
+      // Safety fallback if the model never produced a normal assistant message
       return new Response(
         JSON.stringify({
           role: 'assistant',
-          content: finalMessage.content,
-          original_tool_calls: originalToolCalls,
+          content: 'Sorry, I had trouble processing your request. Please try again.',
         }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -230,11 +229,11 @@ Always be proactive - if a user shows interest in buying, offer to add items to 
       );
     }
 
-    // No tool calls, return the response directly
     return new Response(
       JSON.stringify({
         role: 'assistant',
-        content: assistantMessage.content,
+        content: finalAssistantMessage.content,
+        original_tool_calls: allToolCalls,
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
