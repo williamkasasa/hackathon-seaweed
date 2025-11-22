@@ -133,7 +133,11 @@ export default function Index() {
         onCheckoutComplete={handleCheckoutComplete}
       />
 
-      <ChatWidget />
+      <ChatWidget 
+        products={products}
+        onAddToCart={handleAddToCart}
+        onStartCheckout={handleCheckout}
+      />
     </div>
   );
 }
