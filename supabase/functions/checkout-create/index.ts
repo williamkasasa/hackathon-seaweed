@@ -50,7 +50,7 @@ serve(async (req) => {
     // Create a mapping from our product IDs to seller backend IDs
     const productIdMap: Record<string, string> = {};
     ourProducts?.forEach((product, index) => {
-      const mappedId = ['item_123', 'item_456', 'item_789'][index] || 'item_123';
+      const mappedId = ['item_123', 'item_789', 'item_456'][index] || 'item_123';
       productIdMap[product.id] = mappedId;
     });
     
