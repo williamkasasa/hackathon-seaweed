@@ -135,11 +135,19 @@ serve(async (req) => {
         role: 'system',
         content: `You are a helpful AI shopping assistant for Seaweed & Co. You can help users browse products, add items to their cart, and complete purchases. Be conversational and friendly.
 
-IMPORTANT: When discussing a single product in detail, ALWAYS use the show_product_details tool to display it beautifully. Only provide a brief conversational intro about the product in your text response - the tool will handle showing all the details, price, and features in a nice UI card.
+IMPORTANT TOOLS YOU MUST USE:
 
-Example: If user asks "Tell me about the Seaweed Superfood Powder", call show_product_details with that product_id, then just say something like "Sure! Our Seaweed Superfood Powder is one of our most popular items." The details will be shown in the card.
+1. When users ask about products or want to see the catalog, use the list_products tool.
 
-Always mention the product name in your response but keep product details minimal - let the UI card show the full information.`,
+2. When discussing a single product in detail, use show_product_details to display it beautifully with all information.
+
+3. When users want to buy/purchase/add a product to cart (phrases like "I want to buy", "add to cart", "I'll take", "purchase"), you MUST:
+   - Use the add_to_cart tool with the product_id
+   - Confirm the action in your response (e.g., "I've added the Kombu Seaweed to your cart!")
+
+4. When users want to checkout or complete their purchase, use the start_checkout tool.
+
+Always be proactive - if a user shows interest in buying, offer to add items to their cart!`,
       },
       ...messages,
     ];
