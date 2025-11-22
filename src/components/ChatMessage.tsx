@@ -55,7 +55,7 @@ export function ChatMessage({ message, products, onAddToCart, onViewDetails }: C
                   )}
                   {product.stock < 10 && product.stock > 0 && (
                     <div className="absolute top-2 right-2 bg-accent text-accent-foreground px-2 py-1 rounded-full text-xs font-medium">
-                      Plus que {product.stock}
+                      Only {product.stock} left
                     </div>
                   )}
                 </div>
@@ -73,7 +73,7 @@ export function ChatMessage({ message, products, onAddToCart, onViewDetails }: C
                     }}
                     disabled={product.stock === 0}
                   >
-                    {product.stock === 0 ? 'Rupture de stock' : 'Ajouter au panier'}
+                    {product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
                   </Button>
                 </CardFooter>
               </Card>

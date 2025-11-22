@@ -44,10 +44,10 @@ export function ProductModal({ product, open, onClose, onAddToCart }: ProductMod
               <span className="text-3xl font-bold text-primary">${(product.price / 100).toFixed(2)}</span>
             </div>
             <div className="mb-4">
-              <p className="text-sm text-muted-foreground mb-2">Stock : {product.stock} disponible(s)</p>
+              <p className="text-sm text-muted-foreground mb-2">Stock: {product.stock} available</p>
             </div>
             <div className="flex items-center gap-4 mb-6">
-              <label className="text-sm font-medium">Quantité :</label>
+              <label className="text-sm font-medium">Quantity:</label>
               <div className="flex items-center gap-2">
                 <Button
                   variant="outline"
@@ -69,7 +69,7 @@ export function ProductModal({ product, open, onClose, onAddToCart }: ProductMod
               </div>
             </div>
             <Button className="w-full" size="lg" onClick={handleAddToCart} disabled={product.stock === 0}>
-              Ajouter au panier
+              Add to Cart
             </Button>
           </div>
         </div>
