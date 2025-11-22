@@ -6,8 +6,11 @@ const corsHeaders = {
 };
 
 // Cache products for 1 hour to avoid regenerating on every request
+// Reset cache on deployment by using a version number
+const CACHE_VERSION = '2'; // Increment this to invalidate cache
 let cachedProducts: any = null;
 let cacheTimestamp = 0;
+let cacheVersion = '';
 const CACHE_DURATION = 3600000; // 1 hour in milliseconds
 
 async function generateProducts() {
@@ -137,10 +140,17 @@ serve(async (req) => {
   try {
     // Check if cache is still valid
     const now = Date.now();
-    if (!cachedProducts || (now - cacheTimestamp) > CACHE_DURATION) {
+    const cacheValid = cachedProducts && 
+                       cacheVersion === CACHE_VERSION && 
+                       (now - cacheTimestamp) <= CACHE_DURATION;
+    
+    if (!cacheValid) {
       console.log('Generating new products...');
       cachedProducts = await generateProducts();
       cacheTimestamp = now;
+      cacheVersion = CACHE_VERSION;
+      console.log('Products generated:', cachedProducts.length);
+      console.log('First product:', JSON.stringify(cachedProducts[0]));
     } else {
       console.log('Returning cached products');
     }
