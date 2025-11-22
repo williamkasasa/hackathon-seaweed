@@ -109,6 +109,8 @@ serve(async (req) => {
         currency: checkout.currency.toLowerCase(),
         payment_method: paymentMethodId,
         confirm: 'true',
+        'automatic_payment_methods[enabled]': 'true',
+        'automatic_payment_methods[allow_redirects]': 'never',
         'metadata[checkout_id]': checkoutId,
       }).toString(),
     });
