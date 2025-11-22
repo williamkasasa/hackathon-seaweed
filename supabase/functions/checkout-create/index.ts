@@ -20,11 +20,22 @@ serve(async (req) => {
 
   try {
     const body = await req.json();
+    console.log('Received checkout request body:', JSON.stringify(body));
+    
     const SELLER_BACKEND_URL = Deno.env.get('SELLER_BACKEND_URL');
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY')!;
     
     const supabase = createClient(supabaseUrl, supabaseKey);
+    
+    // Accept either 'items' or 'cart' for backwards compatibility
+    const cartItems = body.items || body.cart;
+    
+    // Validate cart exists
+    if (!cartItems || !Array.isArray(cartItems)) {
+      console.error('Invalid cart data:', cartItems);
+      throw new Error('Cart data is required and must be an array');
+    }
     
     // Get our products from database
     const { data: ourProducts, error: productsError } = await supabase
@@ -44,7 +55,7 @@ serve(async (req) => {
     });
     
     // Transform cart items to use seller backend product IDs
-    const transformedCart = body.cart.map((item: any) => ({
+    const transformedCart = cartItems.map((item: any) => ({
       ...item,
       id: productIdMap[item.id] || item.id,
     }));
@@ -58,7 +69,7 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         ...body,
-        cart: transformedCart,
+        items: transformedCart,
       }),
     });
 
