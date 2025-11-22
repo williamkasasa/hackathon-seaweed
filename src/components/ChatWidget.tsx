@@ -29,9 +29,9 @@ export function ChatWidget() {
   useEffect(() => {
     if (isOpen && messages.length === 0) {
       const welcomeMessages: Record<string, string> = {
-        en: "Hi! I'm Algae 🌊 Your ocean wellness guide! I can help you discover amazing sea vegetable recipes, nutritional info, and product recommendations. What brings you here today?",
-        fr: "Salut! Je suis Algae 🌊 Votre guide du bien-être océanique! Je peux vous aider à découvrir des recettes incroyables de légumes de mer, des infos nutritionnelles et des recommandations de produits. Qu'est-ce qui vous amène ici aujourd'hui?",
-        nl: "Hoi! Ik ben Algae 🌊 Uw oceaan wellness gids! Ik kan u helpen met geweldige zeegroenten recepten, voedingsinformatie en productaanbevelingen. Wat brengt u hier vandaag?",
+        en: "Hi! I'm Algae 🌊 Your ocean wellness guide at Seaweed & Co! I can help you discover amazing sea vegetable recipes, nutritional info, and product recommendations. What brings you here today?",
+        fr: "Salut! Je suis Algae 🌊 Votre guide du bien-être océanique chez Seaweed & Co! Je peux vous aider à découvrir des recettes incroyables de légumes de mer, des infos nutritionnelles et des recommandations de produits. Qu'est-ce qui vous amène ici aujourd'hui?",
+        nl: "Hoi! Ik ben Algae 🌊 Uw oceaan wellness gids bij Seaweed & Co! Ik kan u helpen met geweldige zeegroenten recepten, voedingsinformatie en productaanbevelingen. Wat brengt u hier vandaag?",
       };
       
       setMessages([{
