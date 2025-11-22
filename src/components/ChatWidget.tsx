@@ -115,9 +115,26 @@ export function ChatWidget({ products, onAddToCart, onStartCheckout }: ChatWidge
           const args = JSON.parse(toolCall.function.arguments);
 
           if (functionName === 'add_to_cart') {
-            const product = products.find(p => p.id === args.product_id);
+            let product =
+              products.find((p) => p.id === args.product_id) ||
+              products.find(
+                (p) =>
+                  p.name.toLowerCase() === String(args.product_id).toLowerCase()
+              );
+
+            if (!product && args.name) {
+              product = products.find(
+                (p) => p.name.toLowerCase() === String(args.name).toLowerCase()
+              );
+            }
+
             if (product) {
               onAddToCart(product, args.quantity || 1);
+            } else {
+              console.warn(
+                '[ChatWidget] add_to_cart tool called but no matching product found for',
+                args
+              );
             }
           } else if (functionName === 'start_checkout') {
             onStartCheckout();
