@@ -6,14 +6,16 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 
 interface ShoppingCartProps {
+  open: boolean;
+  onClose: () => void;
   cart: CartItem[];
-  products: Product[];
+  products?: Product[];
   onUpdateQuantity: (productId: string, quantity: number) => void;
   onRemove: (productId: string) => void;
   onCheckout: () => void;
 }
 
-export function ShoppingCart({ cart, products, onUpdateQuantity, onRemove, onCheckout }: ShoppingCartProps) {
+export function ShoppingCart({ open, onClose, cart, products = [], onUpdateQuantity, onRemove, onCheckout }: ShoppingCartProps) {
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
   
   const cartWithProducts = cart.map((item) => ({
@@ -27,17 +29,7 @@ export function ShoppingCart({ cart, products, onUpdateQuantity, onRemove, onChe
   );
 
   return (
-    <Sheet>
-      <SheetTrigger asChild>
-        <Button variant="outline" size="icon" className="relative">
-          <CartIcon className="w-5 h-5" />
-          {totalItems > 0 && (
-            <Badge className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center">
-              {totalItems}
-            </Badge>
-          )}
-        </Button>
-      </SheetTrigger>
+    <Sheet open={open} onOpenChange={onClose}>
       <SheetContent className="w-full sm:max-w-lg flex flex-col">
         <SheetHeader>
           <SheetTitle>Shopping Cart ({totalItems})</SheetTitle>
