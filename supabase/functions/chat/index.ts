@@ -21,6 +21,20 @@ const tools = [
   {
     type: 'function',
     function: {
+      name: 'show_product_details',
+      description: 'Display detailed information about a specific product in a beautiful UI card. Use this when discussing a single product.',
+      parameters: {
+        type: 'object',
+        properties: {
+          product_id: { type: 'string', description: 'The ID of the product to show' },
+        },
+        required: ['product_id'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
       name: 'add_to_cart',
       description: 'Signal the frontend to add an item to the cart',
       parameters: {
@@ -61,6 +75,20 @@ async function executeToolCall(toolName: string, args: any) {
         return JSON.stringify({ error: 'Failed to fetch products' });
       }
 
+    case 'show_product_details':
+      try {
+        const response = await fetch(`${SELLER_BACKEND_URL}/products`);
+        const data = await response.json();
+        const product = data.products.find((p: any) => p.id === args.product_id);
+        if (!product) {
+          return JSON.stringify({ error: 'Product not found' });
+        }
+        return JSON.stringify({ product });
+      } catch (error) {
+        console.error('Error fetching product details:', error);
+        return JSON.stringify({ error: 'Failed to fetch product details' });
+      }
+
     case 'add_to_cart':
       return JSON.stringify({
         success: true,
@@ -95,7 +123,13 @@ serve(async (req) => {
     let conversationHistory = [
       {
         role: 'system',
-        content: `You are a helpful AI shopping assistant. You can help users browse products, add items to their cart, and complete purchases. Be conversational and friendly. When showing products, describe them clearly with their prices. Guide users through the shopping experience smoothly. Always mention product prices when discussing items.`,
+        content: `You are a helpful AI shopping assistant for Seaweed & Co. You can help users browse products, add items to their cart, and complete purchases. Be conversational and friendly.
+
+IMPORTANT: When discussing a single product in detail, ALWAYS use the show_product_details tool to display it beautifully. Only provide a brief conversational intro about the product in your text response - the tool will handle showing all the details, price, and features in a nice UI card.
+
+Example: If user asks "Tell me about the Seaweed Superfood Powder", call show_product_details with that product_id, then just say something like "Sure! Our Seaweed Superfood Powder is one of our most popular items." The details will be shown in the card.
+
+Always mention the product name in your response but keep product details minimal - let the UI card show the full information.`,
       },
       ...messages,
     ];
