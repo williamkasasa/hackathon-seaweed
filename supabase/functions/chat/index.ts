@@ -1,4 +1,5 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.84.0';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -62,14 +63,20 @@ const tools = [
 ];
 
 async function executeToolCall(toolName: string, args: any) {
-  const SELLER_BACKEND_URL = Deno.env.get('SELLER_BACKEND_URL');
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+  const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+  const supabase = createClient(supabaseUrl, supabaseKey);
   
   switch (toolName) {
     case 'list_products':
       try {
-        const response = await fetch(`${SELLER_BACKEND_URL}/products`);
-        const data = await response.json();
-        return JSON.stringify(data);
+        const { data: products, error } = await supabase
+          .from('products')
+          .select('*')
+          .order('name');
+        
+        if (error) throw error;
+        return JSON.stringify(products);
       } catch (error) {
         console.error('Error fetching products:', error);
         return JSON.stringify({ error: 'Failed to fetch products' });
@@ -77,10 +84,13 @@ async function executeToolCall(toolName: string, args: any) {
 
     case 'show_product_details':
       try {
-        const response = await fetch(`${SELLER_BACKEND_URL}/products`);
-        const data = await response.json();
-        const product = data.products.find((p: any) => p.id === args.product_id);
-        if (!product) {
+        const { data: product, error } = await supabase
+          .from('products')
+          .select('*')
+          .eq('id', args.product_id)
+          .single();
+        
+        if (error || !product) {
           return JSON.stringify({ error: 'Product not found' });
         }
         return JSON.stringify({ product });

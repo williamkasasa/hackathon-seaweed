@@ -1,4 +1,5 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.84.0';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -11,17 +12,26 @@ serve(async (req) => {
   }
 
   try {
-    const SELLER_BACKEND_URL = Deno.env.get('SELLER_BACKEND_URL');
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY')!;
     
-    const response = await fetch(`${SELLER_BACKEND_URL}/products`);
+    const supabase = createClient(supabaseUrl, supabaseKey);
     
-    if (!response.ok) {
-      throw new Error(`Seller backend error: ${response.status}`);
+    console.log('Fetching products from database...');
+    
+    const { data: products, error } = await supabase
+      .from('products')
+      .select('*')
+      .order('name');
+    
+    if (error) {
+      console.error('Database error:', error);
+      throw new Error(`Database error: ${error.message}`);
     }
 
-    const data = await response.json();
+    console.log(`Successfully fetched ${products?.length || 0} products`);
     
-    return new Response(JSON.stringify(data), {
+    return new Response(JSON.stringify(products || []), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
