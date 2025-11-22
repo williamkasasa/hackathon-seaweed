@@ -18,11 +18,14 @@ export function Footer() {
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Mail className="w-4 h-4" />
-                <span>info@algamar.com</span>
+                <span>hello@seaweedco.be</span>
               </div>
               <div className="flex items-center gap-2">
                 <Phone className="w-4 h-4" />
-                <span>+34 986 85 75 85</span>
+                <span>+32 2 123 4567</span>
+              </div>
+              <div className="text-white/80 mt-2">
+                Brussels, Belgium
               </div>
             </div>
           </div>
@@ -44,7 +47,7 @@ export function Footer() {
         </div>
         
         <div className="border-t border-white/20 pt-8 text-center text-white/80">
-          <p>© 2024 Algamar. {t('footer.rights')}</p>
+          <p>© 2025 Seaweed & Co. {t('footer.rights')}</p>
         </div>
       </div>
     </footer>
