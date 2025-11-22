@@ -137,8 +137,8 @@ All colors MUST be HSL.
   /* Position ElevenLabs widget to lower left */
   elevenlabs-convai {
     position: fixed !important;
-    bottom: 20px !important;
-    left: 20px !important;
+    bottom: 24px !important;
+    left: 80px !important;
     right: auto !important;
   }
 }
